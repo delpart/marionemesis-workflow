@@ -1,0 +1,33 @@
+on:
+  github:
+    branches:
+      only: main
+
+jobs:
+  CloneRepo:
+    resources:
+      instance-type: C4
+    outputs:
+     marionemesis:
+        type: volume
+    uses: git-checkout@v1
+    with:
+      url: context.event.github.url
+      ref: context.event.github.ref
+  marionemesis:
+    resources:
+      instance-type: P4000
+    needs:
+      - CloneRepo
+    inputs:
+      marionemesis: CloneRepo.outputs.marionemesis
+    outputs:
+      models:
+        type: dataset
+    uses: script@v1
+    with:
+      script: |-
+        cd /inputs/stylegan2
+        pip install requirements.txt
+        python main.py --output_dir=/outputs
+      image: pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
